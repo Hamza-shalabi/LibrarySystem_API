@@ -14,14 +14,12 @@ namespace LibrarySystem.Controllers
     public class UserController(
         IGenericRepository<User> repo,
         IPasswordService passwordService,
-        IAuthenticationRepository authRepo,
         ITokenGenerator tokenService,
         ITokenValidator tokenValidator,
         ITokenRepository tokenRepo
         ) : ControllerBase
     {
         private readonly IGenericRepository<User> _repo = repo;
-        private readonly IAuthenticationRepository _authRepo = authRepo;
         private readonly IPasswordService _passwordService = passwordService;
         private readonly ITokenGenerator _tokenService = tokenService;
         private readonly ITokenValidator _tokenValidator = tokenValidator;
@@ -102,7 +100,7 @@ namespace LibrarySystem.Controllers
 
             userDto.Password = _passwordService.HashPassword(userDto.Password);
 
-            var user = await _authRepo.RegisterAsync(userDto.ToUserFromRegister());
+            var user = await _repo.CreateAsync(userDto.ToUserFromRegister());
             return Ok(user.ToUserDto());
         }
 
@@ -115,7 +113,8 @@ namespace LibrarySystem.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(new Error { ErrorMessage = $"Missing Requirements: {ModelState}" });
 
-            var user = await _authRepo.LoginAsync(userDto.Email);
+            var listUser = await _repo.GetByValueAsync(u => u.Email == userDto.Email);
+            var user = listUser[0];
             if (user == null)
                 return Unauthorized(new Error { ErrorMessage = "Password or Email Are Incorrect" });
 
@@ -201,3 +200,4 @@ namespace LibrarySystem.Controllers
         }
     }
 }
+s
