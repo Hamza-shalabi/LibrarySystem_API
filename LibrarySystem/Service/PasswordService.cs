@@ -7,8 +7,8 @@ namespace LibrarySystem.Service
     {
         public string HashPassword(string password)
         {
-            var hashBassword = PasswordHash.ArgonHashString(password);
-            return hashBassword;
+            var hashPassword = PasswordHash.ArgonHashString(password);
+            return hashPassword;
         }
 
         public bool VerifyPassword(string password, string hashPassword)
