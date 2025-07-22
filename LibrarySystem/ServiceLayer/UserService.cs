@@ -8,13 +8,14 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LibrarySystem.ServiceLayer
 {
-    public class UserService(IGenericRepository<User> repo, IPasswordService passwordService, ITokenGenerator tokenService, ITokenValidator tokenValidator, ITokenRepository tokenRepo)
+    public class UserService(IGenericRepository<User> repo, IPasswordService passwordService, ITokenGenerator tokenService, ITokenValidator tokenValidator, ITokenRepository tokenRepo, IEmailSender emailSender)
     {
         private readonly IGenericRepository<User> _repo = repo;
         private readonly IPasswordService _passwordService = passwordService;
         private readonly ITokenGenerator _tokenService = tokenService;
         private readonly ITokenValidator _tokenValidator = tokenValidator;
         private readonly ITokenRepository _tokenRepo = tokenRepo;
+        private readonly IEmailSender _emailSender = emailSender;
 
         public async Task<UserDto?> GetUser(int id)
         {
@@ -62,6 +63,7 @@ namespace LibrarySystem.ServiceLayer
             userDto.Password = _passwordService.HashPassword(userDto.Password);
 
             var user = await _repo.CreateAsync(userDto.ToUserFromRegister());
+            await _emailSender.SendEmailAsync(userDto.Email, "Welcome to Library System", "Thank you for registering with us!");
 
             return user.ToUserDto();
         }

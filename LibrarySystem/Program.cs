@@ -6,6 +6,7 @@ using LibrarySystem.Interfaces;
 using LibrarySystem.Repository;
 using LibrarySystem.Service;
 using LibrarySystem.ServiceLayer;
+using LibrarySystem.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -61,6 +62,7 @@ builder.Services.AddScoped<BookService>();
 builder.Services.AddScoped<BorrowerService>();
 builder.Services.AddScoped<LoanService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 builder.Services.AddAuthentication(options =>
 {
