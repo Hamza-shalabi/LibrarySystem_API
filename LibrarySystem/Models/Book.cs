@@ -8,9 +8,14 @@ namespace LibrarySystem.Models
     {
         [Key]
         public int Id { get; set; }
+        [Required]
+        [StringLength(50, MinimumLength = 5)]
         public string Title { get; set; } = string.Empty;
+        [Required]
         public long ISBN { get; set; }
+        [Required]
         public DateTime PublishedDate { get; set; }
+        [Required]
         public DateTime CreatedAt { get; set; } = DateTime.Now.ToUniversalTime();
         public DateTime LastUpdatedAt { get; set; }
         public ICollection<Loan> Loans { get; set; } = new List<Loan>();

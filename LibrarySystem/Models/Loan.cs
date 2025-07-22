@@ -8,8 +8,10 @@ namespace LibrarySystem.Models
     {
         [Key]
         public int Id { get; set; }
+        [Required]
         public DateTime LoanDate { get; set; }
         public DateTime? ReturnDate { get; set; }
+        [Required]
         public DateTime CreatedAt { get; set; } = DateTime.Now.ToUniversalTime();
         public DateTime LastUpdatedAt { get; set; }
         [ForeignKey("Book")]
