@@ -1,4 +1,5 @@
 ﻿using LibrarySystem.DTOs.AuthorDTO;
+using LibrarySystem.Facade;
 using LibrarySystem.Interfaces;
 using LibrarySystem.Mapper;
 using LibrarySystem.Models;
@@ -9,20 +10,18 @@ namespace LibrarySystem.Controllers
 {
     [ApiController]
     [Route("api/authors")]
-    public class AuthorController(IGenericRepository<Author> repo) : ControllerBase
+    public class AuthorController(AuthorService service) : ControllerBase
     {
-        private readonly IGenericRepository<Author> _repo = repo;
+        private readonly AuthorService _service = service;
 
         [Authorize]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK, Type= typeof(List<AuthorDto>))]
         public async Task<IActionResult> GetAuthors()
         {
-            var Authors= await _repo.GetAllAsync(x=>x.Books);
+            var Authors= await _service.GetAuthors();
 
-            var AuthorsDto = Authors.Select(s => s.ToAuthorDto());
-
-            return Ok(AuthorsDto);
+            return Ok(Authors);
         }
 
         [Authorize]
@@ -31,12 +30,11 @@ namespace LibrarySystem.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AuthorDto))]
         public async Task<IActionResult> GetAuthor([FromRoute] int id)
         {
-            var isExists = await _repo.IsExistAsync(id);
-            if (!isExists)
+            var author = await _service.GetAuthor(id);
+            if(author == null)
                 return NotFound(new Error { ErrorMessage = $"There is No Author With This ID {id}" });
 
-            var author = await _repo.GetAsync(id, (x => x.Books));
-            return Ok(author.ToAuthorDto());
+            return Ok(author);
         }
 
         [Authorize(Roles = "Admin")]
@@ -48,9 +46,8 @@ namespace LibrarySystem.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(new Error { ErrorMessage = $"Missing Requirements: {ModelState}" });
 
-            var Author = authorDto.ToAuthorFromCreateDto();
-            await _repo.CreateAsync(Author);
-            return Ok(Author.ToAuthorDto());
+            var Author = await _service.CreateAuthor(authorDto.ToAuthorFromCreateDto());
+            return Ok(Author);
         }
 
         [Authorize(Roles = "Admin")]
@@ -59,11 +56,10 @@ namespace LibrarySystem.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> DeleteAuthor([FromRoute] int id)
         {
-            var isExists = await _repo.IsExistAsync(id);
+            var isExists = await _service.DeleteAuthor(id);
             if (!isExists)
                 return NotFound(new Error { ErrorMessage = $"There is No Author With This ID {id}" });
 
-            var author = await _repo.DeleteAsync(id);
             return NoContent();
         }
 
@@ -77,20 +73,11 @@ namespace LibrarySystem.Controllers
             if(!ModelState.IsValid)
                 return BadRequest(new Error { ErrorMessage = $"Missing Requirements: {ModelState}" });
 
-            if(authorDto.Id != id)
-                return BadRequest(new Error { ErrorMessage = "ID's Mismatch" });
-
-            var isExists = await _repo.IsExistAsync(id);
-            if (!isExists)
+            var author = await _service.UpdateAuthor(id, authorDto);
+            if (author == null)
                 return NotFound(new Error { ErrorMessage = $"There is No Author With This ID {id}" });
 
-            var originalAuthor = await _repo.GetAsync(id);
-            originalAuthor.Id = authorDto.Id;
-            originalAuthor.Name = authorDto.Name;
-            originalAuthor.Bio = authorDto.Bio;
-
-            var Author = await _repo.UpdateAsync(originalAuthor);
-            return Ok(Author.ToAuthorDto());
+            return Ok(author);
         }
     }
 }

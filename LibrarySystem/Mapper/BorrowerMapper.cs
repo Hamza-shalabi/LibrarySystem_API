@@ -41,7 +41,6 @@ namespace LibrarySystem.Mapper
         {
             return new Borrower
             {
-                Id = borrower.Id,
                 Name = borrower.Name,
                 Email = borrower.Email,
                 Phone = borrower.Phone,

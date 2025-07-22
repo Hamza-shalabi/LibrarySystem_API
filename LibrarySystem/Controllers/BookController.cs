@@ -2,6 +2,7 @@
 using LibrarySystem.Interfaces;
 using LibrarySystem.Mapper;
 using LibrarySystem.Models;
+using LibrarySystem.ServiceLayer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,19 +10,18 @@ namespace LibrarySystem.Controllers
 {
     [ApiController]
     [Route("api/books")]
-    public class BookController(IGenericRepository<Book> repo) : ControllerBase
+    public class BookController(IGenericRepository<Book> repo, BookService serivce) : ControllerBase
     {
         private readonly IGenericRepository<Book> _repo = repo;
+        private readonly BookService _service = serivce;
 
         [Authorize]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<BookDto>))]
         public async Task<IActionResult> GetBooks()
         {
-            var Books = await _repo.GetAllAsync(x => x.Author);
-            
-            var BooksDto = Books.Select(s => s.ToBookDto());
-            return Ok(BooksDto);
+            var Books = await _service.GetBooks();
+            return Ok(Books);
         }
 
         [Authorize]
@@ -30,28 +30,24 @@ namespace LibrarySystem.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BookDto))]
         public async Task<IActionResult> GetBook([FromRoute] int id)
         {
-            var isExists = await _repo.IsExistAsync(id);
-            if (!isExists)
+            var Book = await _service.GetBook(id);
+            if (Book == null)
                 return NotFound(new Error { ErrorMessage = $"There is No Book With This ID {id}" });
 
-            var book = await _repo.GetAsync(id, (x => x.Author));
-
-            var BookDto = book.ToBookDto(); 
-            return Ok(BookDto);
+            return Ok(Book);
         }
 
         [Authorize(Roles = "Admin")]
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(Error))]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BookDto))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BookCUDto))]
         public async Task<IActionResult> CreateBook([FromBody]CreateBookRequestDto bookDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(new Error { ErrorMessage = $"Missing Requirements {ModelState}" });
 
-            var book = bookDto.ToBookFromCreateDto();
-            await _repo.CreateAsync(book);
-            return Ok(book.ToBookDto());
+            var book = await _service.CreateBook(bookDto.ToBookFromCreateDto());
+            return Ok(book);
         }
 
         [Authorize(Roles = "Admin")]
@@ -60,11 +56,9 @@ namespace LibrarySystem.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> DeleteBook([FromRoute] int id)
         {
-            var isExists = await _repo.IsExistAsync(id);
+            var isExists = await _service.DeleteBook(id);
             if (!isExists)
-                return NotFound(new Error { ErrorMessage = $"There is No Author With This ID {id}" });
-
-            await _repo.DeleteAsync(id);
+                return NotFound(new Error { ErrorMessage = $"There is No Book With This ID {id}" });
 
             return NoContent();
         }
@@ -73,28 +67,17 @@ namespace LibrarySystem.Controllers
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(Error))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BookDto))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BookCUDto))]
         public async Task<IActionResult> UpdateBook([FromRoute] int id, [FromBody]UpdateBookRequestDto bookDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(new Error { ErrorMessage = $"Missing Requirements: {ModelState}" });
 
-            if (bookDto.Id != id)
-                return BadRequest(new Error { ErrorMessage = "ID's Mismatch" });
-
-            var isExists = await _repo.IsExistAsync(id);
-            if (!isExists)
+            var book = await _service.UpdateBook(id, bookDto);
+            if (book == null)
                 return NotFound(new Error { ErrorMessage = $"There is No Book With This ID {id}" });
 
-            var BookTU = await _repo.GetAsync(id);
-            BookTU.Id = bookDto.Id;
-            BookTU.Title = bookDto.Title;
-            BookTU.ISBN = bookDto.ISBN;
-            BookTU.PublishedDate = bookDto.PublishedDate;
-            BookTU.LastUpdatedAt = DateTime.Now.ToUniversalTime();
-
-            var Book = await _repo.UpdateAsync(BookTU);
-            return Ok(Book.ToBookDto());
+            return Ok(book);
         }
     }
 }

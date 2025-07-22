@@ -38,7 +38,6 @@ namespace LibrarySystem.Mapper
         {
             return new Author
             {
-                Id= author.Id,
                 Name = author.Name,
                 Bio = author.Bio,
                 LastUpdatedAt = DateTime.Now.ToUniversalTime(),

@@ -44,10 +44,20 @@ namespace LibrarySystem.Mapper
         {
             return new Book
             {
-                Id = book.Id,
                 Title=book.Title,
                 ISBN=book.ISBN,
                 PublishedDate=book.PublishedDate
+            };
+        }
+
+        public static BookCUDto ToBookCUDto(this Book book)
+        {
+            return new BookCUDto
+            {
+                Id = book.Id,
+                Title = book.Title,
+                ISBN = book.ISBN,
+                PublishedDate = book.PublishedDate
             };
         }
     }

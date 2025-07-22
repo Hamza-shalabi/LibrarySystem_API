@@ -12,8 +12,6 @@ namespace LibrarySystem.Mapper
                 Id = loan.Id,
                 LoanDate = loan.LoanDate,
                 ReturnDate = loan.ReturnDate,
-                Borrower = loan.Borrower.ToBorrowerIncludeDto(),
-                Book = loan.Book.ToBookIncludeDto(),
             };
         }
 
@@ -55,6 +53,19 @@ namespace LibrarySystem.Mapper
                 Id = loan.Id,
                 LoanDate = loan.LoanDate,
                 ReturnDate = loan.ReturnDate,
+                Borrower = loan.Borrower.ToBorrowerIncludeDto(),
+
+            };
+        }
+
+        public static LoanIncludeBorrowerBookDto ToLoanIncludeBorrowerBookDto(this Loan loan)
+        {
+            return new LoanIncludeBorrowerBookDto
+            {
+                Id = loan.Id,
+                LoanDate = loan.LoanDate,
+                ReturnDate = loan.ReturnDate,
+                Book = loan.Book.ToBookIncludeDto(),
                 Borrower = loan.Borrower.ToBorrowerIncludeDto(),
             };
         }

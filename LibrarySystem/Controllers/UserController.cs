@@ -4,6 +4,7 @@ using LibrarySystem.Interface;
 using LibrarySystem.Interfaces;
 using LibrarySystem.Mapper;
 using LibrarySystem.Models;
+using LibrarySystem.ServiceLayer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,7 +17,8 @@ namespace LibrarySystem.Controllers
         IPasswordService passwordService,
         ITokenGenerator tokenService,
         ITokenValidator tokenValidator,
-        ITokenRepository tokenRepo
+        ITokenRepository tokenRepo,
+        UserService service
         ) : ControllerBase
     {
         private readonly IGenericRepository<User> _repo = repo;
@@ -24,6 +26,7 @@ namespace LibrarySystem.Controllers
         private readonly ITokenGenerator _tokenService = tokenService;
         private readonly ITokenValidator _tokenValidator = tokenValidator;
         private readonly ITokenRepository _tokenRepo = tokenRepo;
+        private readonly UserService _service = service;
 
         [Authorize]
         [HttpGet("{id}")]
@@ -31,12 +34,10 @@ namespace LibrarySystem.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDto))]
         public async Task<IActionResult> GetUser([FromRoute] int id)
         {
-            var isExist = await _repo.IsExistAsync(id);
-            if (!isExist)
+            var user = await _service.GetUser(id);
+            if( user == null)
                 return NotFound(new Error { ErrorMessage = $"There is No User With This ID {id}" });
-
-            var user = await _repo.GetAsync(id);
-            return Ok(user.ToUserDto());
+            return Ok(user);
         }
 
         [Authorize]
@@ -49,19 +50,11 @@ namespace LibrarySystem.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(new Error { ErrorMessage = $"Missing Requirements: {ModelState}" });
 
-            if (userDto.Id != id)
-                return BadRequest(new Error { ErrorMessage = "ID's Mismatch" });
-
-            var isExist = await _repo.IsExistAsync(id);
-            if (!isExist)
+            var user = await _service.UpdateUser(id, userDto);
+            if (user == null)
                 return NotFound(new Error { ErrorMessage = $"There is No User With This ID {id}" });
 
-            var originalUser = await _repo.GetAsync(id);
-            originalUser.UserName = userDto.UserName;
-            originalUser.Phone = userDto.Phone;
-
-            var user = await _repo.UpdateAsync(originalUser);
-            return Ok(user.ToUserDto());
+            return Ok(user);
         }
 
         [Authorize]
@@ -70,11 +63,9 @@ namespace LibrarySystem.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            var isExist = await _repo.IsExistAsync(id);
+            var isExist = await _service.DeleteUser(id);
             if (!isExist)
                 return NotFound(new Error { ErrorMessage = $"There is No User With This ID {id}" });
-
-            var user = await _repo.DeleteAsync(id);
             return NoContent();
         }
 
@@ -87,21 +78,11 @@ namespace LibrarySystem.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(new Error { ErrorMessage = $"Missing Requirements: {ModelState}" });
 
-            var email = await _repo.GetByValueAsync(x => x.Email == userDto.Email);
-            if (email.Any())
-                return Conflict(new Error { ErrorMessage = "a User With This Email Or User Name Already Exists!" });
+            var user = await _service.RegisterUser(userDto);
+            if (user == null)
+                return Conflict(new Error { ErrorMessage = "Email Already Exists or Passwords Do Not Match" });
 
-            var name = await _repo.GetByValueAsync(x => x.UserName == userDto.UserName);
-            if (name.Any())
-                return Conflict(new Error { ErrorMessage = "a User With This Email Or User Name Already Exists!" });
-
-            if (userDto.Password != userDto.ConfirmPassword)
-                return BadRequest(new Error { ErrorMessage = "Password And Confirm Password Do Not Match!" });
-
-            userDto.Password = _passwordService.HashPassword(userDto.Password);
-
-            var user = await _repo.CreateAsync(userDto.ToUserFromRegister());
-            return Ok(user.ToUserDto());
+            return Ok(user);
         }
 
         [HttpPost("login")]
@@ -113,30 +94,11 @@ namespace LibrarySystem.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(new Error { ErrorMessage = $"Missing Requirements: {ModelState}" });
 
-            var listUser = await _repo.GetByValueAsync(u => u.Email == userDto.Email);
-            var user = listUser.FirstOrDefault();
-            if (user == null)
-                return Unauthorized(new Error { ErrorMessage = "Password or Email Are Incorrect" });
+            var token = await _service.LoginUser(userDto);
+            if (token == null)
+                return Unauthorized(new Error { ErrorMessage = "Invalid Email or Password" });
 
-            var isEqual = _passwordService.VerifyPassword(userDto.Password, user.Password);
-            if (!isEqual)
-                return Unauthorized(new Error { ErrorMessage = "Password or Email Are Incorrect" });
-
-            var accessToken = _tokenService.GenerateAccessToken(user);
-            var refreshToken = _tokenService.GenerateRefreshToken();
-            var refreshTokenS = new RefreshToken
-            {
-                Token = refreshToken,
-                UserId = user.Id,
-            };
-            await _tokenRepo.CreateRefreshTokenAsync(refreshTokenS);
-            var tokenDto = new TokenDto
-            {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken,
-            };
-
-            return Ok(tokenDto);
+            return Ok(token);
         }
 
         [HttpPost("refresh")]
@@ -148,35 +110,11 @@ namespace LibrarySystem.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(new Error { ErrorMessage = $"Missing Requirements: {ModelState}" });
 
-            var isValid = _tokenValidator.Validate(refreshDto.RefreshToken);
-            if (!isValid)
+            var token = await _service.RefreshToken(refreshDto);
+            if (token == null)
                 return Unauthorized(new Error { ErrorMessage = "Invalid Refresh Token" });
 
-            var refreshToken = await _tokenRepo.GetByRefreshTokenAsync(refreshDto.RefreshToken);
-            if (refreshToken == null)
-                return BadRequest(new Error { ErrorMessage = "Invalid Refresh Token" });
-
-            var user = await _repo.GetAsync(refreshToken.UserId);
-            if (user == null)
-                return BadRequest(new Error { ErrorMessage = "Invalid Refresh Token" });
-
-            await _tokenRepo.DeleteRefreshTokenAsync(refreshToken.Id);
-
-            var accessToken = _tokenService.GenerateAccessToken(user);
-            var newRefreshToken = _tokenService.GenerateRefreshToken();
-            var refreshTokenS = new RefreshToken
-            {
-                Token = newRefreshToken,
-                UserId = user.Id,
-            };
-            await _tokenRepo.CreateRefreshTokenAsync(refreshTokenS);
-            var tokenDto = new TokenDto
-            {
-                AccessToken = accessToken,
-                RefreshToken = newRefreshToken,
-            };
-
-            return Ok(tokenDto);
+            return Ok(token);
 
         }
 
@@ -189,7 +127,7 @@ namespace LibrarySystem.Controllers
             try
             {
                 int id = int.Parse(HttpContext.User.FindFirstValue("Id"));
-                await _tokenRepo.DeleteAllRefreshTokensAsync(id);
+                await _service.Logout(id);
             }
             catch (Exception e)
             {

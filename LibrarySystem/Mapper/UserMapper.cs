@@ -42,7 +42,6 @@ namespace LibrarySystem.Mapper
         {
             return new User
             {
-                Id = userDto.Id,
                 UserName = userDto.UserName,
                 Phone = userDto.Phone,
                 Role = userDto.Role ?? "User"

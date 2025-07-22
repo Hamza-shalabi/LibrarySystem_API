@@ -1,9 +1,11 @@
 using System.Text;
 using LibrarySystem.Data;
+using LibrarySystem.Facade;
 using LibrarySystem.Interface;
 using LibrarySystem.Interfaces;
 using LibrarySystem.Repository;
 using LibrarySystem.Service;
+using LibrarySystem.ServiceLayer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -54,6 +56,11 @@ builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<ITokenGenerator, TokenGenerator>();
 builder.Services.AddScoped<ITokenValidator, TokenValidator>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
+builder.Services.AddScoped<AuthorService>();
+builder.Services.AddScoped<BookService>();
+builder.Services.AddScoped<BorrowerService>();
+builder.Services.AddScoped<LoanService>();
+builder.Services.AddScoped<UserService>();
 
 builder.Services.AddAuthentication(options =>
 {

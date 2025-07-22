@@ -16,6 +16,6 @@ namespace LibrarySystem.Models
         public ICollection<Loan> Loans { get; set; } = new List<Loan>();
         [ForeignKey("Author")]
         public int Author_Id { get; set; }
-        public Author Author { get; set; } = new();
+        public Author Author { get; set; }
     }
 }

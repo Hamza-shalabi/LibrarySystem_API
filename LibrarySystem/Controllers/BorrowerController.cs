@@ -2,6 +2,7 @@
 using LibrarySystem.Interfaces;
 using LibrarySystem.Mapper;
 using LibrarySystem.Models;
+using LibrarySystem.ServiceLayer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,19 +10,18 @@ namespace LibrarySystem.Controllers
 {
     [ApiController]
     [Route("api/borrowers")]
-    public class BorrowerController(IGenericRepository<Borrower> repo) : ControllerBase
+    public class BorrowerController(IGenericRepository<Borrower> repo, BorrowerService service) : ControllerBase
     {
         private readonly IGenericRepository<Borrower> _repo = repo;
+        private readonly BorrowerService _service = service;
 
         [Authorize]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<BorrowerDto>))]
         public async Task<IActionResult> GetBorrowers()
         {
-            var Borrowers = await _repo.GetAllAsync();
-
-            var BorrowersDto = Borrowers.Select(b => b.ToBorrowerDto());
-            return Ok(BorrowersDto);
+            var Borrowers = await _service.GetBorrowers();
+            return Ok(Borrowers);
         }
 
         [Authorize]
@@ -30,13 +30,11 @@ namespace LibrarySystem.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
         public async Task<IActionResult> GetBorrower([FromRoute]int id)
         {
-            var isExists = await _repo.IsExistAsync(id);
-            if (!isExists)
+            var borrower = await _service.GetBorrower(id);
+            if (borrower == null)
                 return NotFound(new Error { ErrorMessage = $"There is No Borrower With This ID {id}" });
 
-            var borrower = await _repo.GetAsync(id);
-            var borrowerDto = borrower.ToBorrowerDto();
-            return Ok(borrowerDto);
+            return Ok(borrower);
         }
 
         [Authorize(Roles = "Admin")]
@@ -48,9 +46,8 @@ namespace LibrarySystem.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(new Error { ErrorMessage = $"Missing Requirements {ModelState}" });
 
-            var borrower = borrowerDto.ToBorrowerFromCreateDto();
-            await _repo.CreateAsync(borrower);
-            return Ok(borrower.ToBorrowerDto());
+            var borrower = await _service.CreateBorrower(borrowerDto.ToBorrowerFromCreateDto());
+            return Ok(borrower);
         }
 
         [Authorize(Roles = "Admin")]
@@ -59,11 +56,9 @@ namespace LibrarySystem.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
         public async Task<IActionResult> DeleteBorrower([FromRoute]int id)
         {
-            var isExists = await _repo.IsExistAsync(id);
+            var isExists = await _service.DeleteBorrower(id);
             if (!isExists)
                 return NotFound(new Error { ErrorMessage = $"There is No Borrower With This ID {id}" });
-
-            var borrower = await _repo.DeleteAsync(id);
             return NoContent();
         }
 
@@ -77,21 +72,11 @@ namespace LibrarySystem.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(new Error { ErrorMessage = $"Missing Requirements: {ModelState}" });
 
-            if (borrowerDto.Id != id)
-                return BadRequest(new Error { ErrorMessage = "ID's Mismatch" });
-
-            var isExists = await _repo.IsExistAsync(id);
-            if (!isExists)
+            var borrower = await _service.UpdateBorrower(id, borrowerDto);
+            if (borrower == null)
                 return NotFound(new Error { ErrorMessage = $"There is No Borrower With This ID {id}" });
 
-            var originalBorrower = await _repo.GetAsync(id);
-            originalBorrower.Id = borrowerDto.Id;
-            originalBorrower.Name = borrowerDto.Name;
-            originalBorrower.Email = borrowerDto.Email;
-            originalBorrower.Phone = borrowerDto.Phone;
-
-            var borrower = await _repo.UpdateAsync(originalBorrower);
-            return Ok(borrower.ToBorrowerDto());
+            return Ok(borrower);
         }
     }
 }
