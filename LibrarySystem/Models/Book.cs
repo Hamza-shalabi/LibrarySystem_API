@@ -13,7 +13,7 @@ namespace LibrarySystem.Models
         public DateTime PublishedDate { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now.ToUniversalTime();
         public DateTime LastUpdatedAt { get; set; }
-        public List<Loan> Loans { get; set; } = [];
+        public ICollection<Loan> Loans { get; set; } = new List<Loan>();
         [ForeignKey("Author")]
         public int Author_Id { get; set; }
         public Author Author { get; set; } = new();

@@ -12,6 +12,6 @@ namespace LibrarySystem.Models
         public long Phone { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now.ToUniversalTime();
         public DateTime LastUpdatedAt { get; set; }
-        public List<Loan> Loan { get; set; } = [];
+        public ICollection<Loan> Loan { get; set; } = new List<Loan>();
     }
 }

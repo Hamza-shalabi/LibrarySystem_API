@@ -11,6 +11,6 @@ namespace LibrarySystem.Models
         public string Bio { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.Now.ToUniversalTime();
         public DateTime LastUpdatedAt { get; set; }
-        public List<Book> Books { get; set; } = [];
+        public ICollection<Book> Books { get; set; } = new List<Book>();
     }
 }
