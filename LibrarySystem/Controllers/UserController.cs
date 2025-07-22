@@ -114,7 +114,7 @@ namespace LibrarySystem.Controllers
                 return BadRequest(new Error { ErrorMessage = $"Missing Requirements: {ModelState}" });
 
             var listUser = await _repo.GetByValueAsync(u => u.Email == userDto.Email);
-            var user = listUser[0];
+            var user = listUser.FirstOrDefault();
             if (user == null)
                 return Unauthorized(new Error { ErrorMessage = "Password or Email Are Incorrect" });
 

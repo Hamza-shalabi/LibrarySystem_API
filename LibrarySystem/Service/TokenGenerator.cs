@@ -24,16 +24,14 @@ namespace LibrarySystem.Service
             var claims = new List<Claim>
             {
                new Claim("Id", user.Id.ToString()),
-               new Claim(JwtRegisteredClaimNames.Email, user.Email),
-               new Claim(JwtRegisteredClaimNames.Name, user.UserName),
-               new Claim(JwtRegisteredClaimNames.PhoneNumber, user.Phone.ToString()),
+               new Claim(ClaimTypes.Role, user.Role),
             };
 
             var creds = new SigningCredentials(_accessKey, SecurityAlgorithms.HmacSha512Signature);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.Now.AddMinutes(30),
+                Expires = DateTime.Now.AddDays(1),
                 SigningCredentials = creds,
                 Issuer = _config["JWT:Issuer"],
                 Audience = _config["JWT:Audience"]
@@ -50,7 +48,7 @@ namespace LibrarySystem.Service
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = null,
-                Expires = DateTime.Now.AddMonths(6),
+                Expires = DateTime.Now.AddDays(2),
                 SigningCredentials = creds,
                 Issuer = _config["JWT:Issuer"],
                 Audience = _config["JWT:Audience"]

@@ -10,5 +10,6 @@ namespace LibrarySystem.DTOs.UserDTO
         public string UserName { get; set; } = string.Empty;
         [Required]
         public int Phone { get; set; }
+        public string Role { get; set; } = "User";
     }
 }

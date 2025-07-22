@@ -40,7 +40,7 @@ namespace LibrarySystem.Controllers
             return Ok(BookDto);
         }
 
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(Error))]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BookDto))]
@@ -54,7 +54,7 @@ namespace LibrarySystem.Controllers
             return Ok(book.ToBookDto());
         }
 
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -69,7 +69,7 @@ namespace LibrarySystem.Controllers
             return NoContent();
         }
 
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(Error))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]

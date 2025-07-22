@@ -13,6 +13,7 @@ namespace LibrarySystem.Mapper
                 UserName = user.UserName,
                 Email = user.Email,
                 Phone = user.Phone,
+                Role = user.Role
             };
         }
 
@@ -33,6 +34,7 @@ namespace LibrarySystem.Mapper
                 Email = userDto.Email,
                 Phone = userDto.Phone,
                 Password = userDto.Password,
+                Role = userDto.Role ?? "User"
             };
         }
 
@@ -43,6 +45,7 @@ namespace LibrarySystem.Mapper
                 Id = userDto.Id,
                 UserName = userDto.UserName,
                 Phone = userDto.Phone,
+                Role = userDto.Role ?? "User"
             };
         }
     }

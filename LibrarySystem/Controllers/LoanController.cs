@@ -44,7 +44,7 @@ namespace LibrarySystem.Controllers
             return Ok(LoansDto);
         }
 
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(LoanDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(Error))]
@@ -58,7 +58,7 @@ namespace LibrarySystem.Controllers
             return Ok(loan.ToLoanDto());
         }
 
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(LoanDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(Error))]
