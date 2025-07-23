@@ -18,6 +18,6 @@ namespace LibrarySystem.Models
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.Now.ToUniversalTime();
         public DateTime LastUpdatedAt { get; set; }
-        public ICollection<Loan> Loan { get; set; } = new List<Loan>();
+        public ICollection<Loan> Loan { get; set; }
     }
 }

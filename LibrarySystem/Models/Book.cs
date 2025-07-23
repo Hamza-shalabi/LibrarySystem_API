@@ -18,7 +18,7 @@ namespace LibrarySystem.Models
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.Now.ToUniversalTime();
         public DateTime LastUpdatedAt { get; set; }
-        public ICollection<Loan> Loans { get; set; } = new List<Loan>();
+        public ICollection<Loan> Loans { get; set; }
         [ForeignKey("Author")]
         public int Author_Id { get; set; }
         public Author Author { get; set; }

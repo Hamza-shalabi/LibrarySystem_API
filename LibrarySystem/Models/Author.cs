@@ -15,6 +15,6 @@ namespace LibrarySystem.Models
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.Now.ToUniversalTime();
         public DateTime LastUpdatedAt { get; set; }
-        public ICollection<Book> Books { get; set; } = new List<Book>();
+        public ICollection<Book> Books { get; set; }
     }
 }

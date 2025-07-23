@@ -1,0 +1,9 @@
+[33m060bf6d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m Email Sender Service
+[33m41f2ae7[m Data Check on the Models
+[33m74a6912[m Service Layer Between the controller and the repository
+[33mcd92b3e[m ICollection Type Lists
+[33m196100a[m Role Based Authoriztion
+[33m24acfa0[m minor-fix extra s
+[33m837e04b[m merge Authentication to Generic
+[33m4fbc8c7[m Add project files.
+[33m0570ec8[m Add .gitattributes and .gitignore.
